@@ -1,0 +1,172 @@
+{
+  "models": {
+    "logistic regression": {
+      "fit_seconds": 0.3,
+      "inference_us_per_row": 0.2,
+      "auc": 0.7459,
+      "pr_auc": 0.5035,
+      "ks": 0.3868,
+      "brier": 0.1431,
+      "logloss": 0.4539,
+      "ece": 0.0095,
+      "cost_per_account": 0.6088,
+      "threshold": 0.2056,
+      "auc_ci95": [
+        0.7308,
+        0.76
+      ]
+    },
+    "random forest": {
+      "fit_seconds": 3.3,
+      "inference_us_per_row": 10.8,
+      "auc": 0.772,
+      "pr_auc": 0.5396,
+      "ks": 0.407,
+      "brier": 0.1373,
+      "logloss": 0.4362,
+      "ece": 0.0112,
+      "cost_per_account": 0.5687,
+      "threshold": 0.144,
+      "auc_ci95": [
+        0.7585,
+        0.7856
+      ]
+    },
+    "hist gradient boosting": {
+      "fit_seconds": 3.1,
+      "inference_us_per_row": 8.8,
+      "auc": 0.7735,
+      "pr_auc": 0.534,
+      "ks": 0.4141,
+      "brier": 0.1371,
+      "logloss": 0.4351,
+      "ece": 0.0115,
+      "cost_per_account": 0.5618,
+      "threshold": 0.1508,
+      "auc_ci95": [
+        0.7591,
+        0.7877
+      ]
+    },
+    "MLP (64-32)": {
+      "fit_seconds": 0.8,
+      "inference_us_per_row": 1.4,
+      "auc": 0.7601,
+      "pr_auc": 0.5178,
+      "ks": 0.3931,
+      "brier": 0.1404,
+      "logloss": 0.4475,
+      "ece": 0.0184,
+      "cost_per_account": 0.5872,
+      "threshold": 0.1706,
+      "auc_ci95": [
+        0.7456,
+        0.7761
+      ]
+    },
+    "ensemble (LR+HGB+MLP)": {
+      "fit_seconds": 4.2,
+      "inference_us_per_row": 10.4,
+      "auc": 0.7694,
+      "pr_auc": 0.5311,
+      "ks": 0.4006,
+      "brier": 0.1385,
+      "logloss": 0.4394,
+      "ece": 0.0131,
+      "cost_per_account": 0.562,
+      "threshold": 0.1505,
+      "auc_ci95": [
+        0.7558,
+        0.7843
+      ]
+    },
+    "segment specialists (HGB x2)": {
+      "fit_seconds": null,
+      "inference_us_per_row": null,
+      "auc": 0.7698,
+      "pr_auc": 0.5312,
+      "ks": 0.4122,
+      "brier": 0.1384,
+      "logloss": 0.4392,
+      "ece": 0.0193,
+      "cost_per_account": 0.5607,
+      "threshold": 0.1605,
+      "auc_ci95": [
+        0.7563,
+        0.784
+      ]
+    }
+  },
+  "fairness": {
+    "logistic regression": {
+      "decline_rate_by_sex": {
+        "1": 0.32828919714165616,
+        "2": 0.3012979839823253
+      },
+      "approval_ratio_min_over_max": 0.9614,
+      "auc_by_sex": {
+        "1": 0.7559,
+        "2": 0.7355
+      }
+    },
+    "random forest": {
+      "decline_rate_by_sex": {
+        "1": 0.5460277427490542,
+        "2": 0.4910245788456228
+      },
+      "approval_ratio_min_over_max": 0.8919,
+      "auc_by_sex": {
+        "1": 0.7723,
+        "2": 0.7701
+      }
+    },
+    "hist gradient boosting": {
+      "decline_rate_by_sex": {
+        "1": 0.5115594787725936,
+        "2": 0.45263739298536315
+      },
+      "approval_ratio_min_over_max": 0.8924,
+      "auc_by_sex": {
+        "1": 0.774,
+        "2": 0.7713
+      }
+    },
+    "MLP (64-32)": {
+      "decline_rate_by_sex": {
+        "1": 0.4203446826397646,
+        "2": 0.3689588511460922
+      },
+      "approval_ratio_min_over_max": 0.9186,
+      "auc_by_sex": {
+        "1": 0.7657,
+        "2": 0.7543
+      }
+    },
+    "ensemble (LR+HGB+MLP)": {
+      "decline_rate_by_sex": {
+        "1": 0.4947456914670029,
+        "2": 0.43220104943385806
+      },
+      "approval_ratio_min_over_max": 0.8898,
+      "auc_by_sex": {
+        "1": 0.7721,
+        "2": 0.7654
+      }
+    },
+    "segment specialists (HGB x2)": {
+      "decline_rate_by_sex": {
+        "1": 0.44976881042454814,
+        "2": 0.404032035349351
+      },
+      "approval_ratio_min_over_max": 0.9233,
+      "auc_by_sex": {
+        "1": 0.7693,
+        "2": 0.7692
+      }
+    }
+  },
+  "n_train": 18000,
+  "n_valid": 6000,
+  "n_test": 6000,
+  "default_rate": 0.2212
+}
