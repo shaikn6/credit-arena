@@ -1,0 +1,19 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install numpy pandas scikit-learn matplotlib pytest ruff
+      - run: ruff check --select E9,F .
+      - name: download the public dataset the tests read
+        run: python -c "from sklearn.datasets import fetch_openml as f; d=f(data_id=42477,as_frame=True,parser='auto'); d.data.assign(target=d.target).to_csv('data.csv',index=False)"
+      - run: pytest -q

@@ -1,5 +1,4 @@
 """UCI 'Default of Credit Card Clients' (30k accounts, 22% default) with engineered features."""
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 

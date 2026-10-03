@@ -7,7 +7,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from credit.data import load, features, split, PROTECTED
-from credit.metrics import score, best_threshold, bootstrap_auc_ci, cost
+from credit.metrics import score, best_threshold, bootstrap_auc_ci
 
 df = load()
 tr, va, te = split(df)
