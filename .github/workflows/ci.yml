@@ -15,4 +15,4 @@ jobs:
       - run: ruff check --select E9,F .
       - name: download the public dataset the tests read
         run: python -c "from sklearn.datasets import fetch_openml as f; d=f(data_id=42477,as_frame=True,parser='auto'); d.data.assign(target=d.target).to_csv('data.csv',index=False)"
-      - run: pytest -q
+      - run: python -m pytest -q
