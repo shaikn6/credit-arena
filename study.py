@@ -1,6 +1,7 @@
 """Paper study: when is a more complex credit model worth it? Two datasets, repeated splits, a sweep of cost ratios,
 paired comparisons against logistic regression, and an approval-parity audit by sex and age. Writes study.json."""
 import json
+import os
 import time
 
 import numpy as np
@@ -21,14 +22,20 @@ COST_RATIOS = (1, 2, 5, 10)  # cost of a missed defaulter relative to a wrongly 
 MODELS = ("logistic regression", "random forest", "gradient boosting", "MLP", "ensemble")
 
 
+def read(path):
+    if not os.path.exists(path):
+        raise SystemExit(f"{path} not found. Run `make data` (or `python download_data.py`) to download it.")
+    return pd.read_csv(path)
+
+
 def taiwan():
-    df = pd.read_csv("data.csv")
+    df = read("data.csv")
     X = taiwan_features(df)  # sex (x2) already excluded
     return X, df["target"].values, (df["x2"] == 2).values, (df["x5"] < 25).values  # female, under 25
 
 
 def german():
-    df = pd.read_csv("data_german.csv")
+    df = read("data_german.csv")
     female = df["personal_status"].str.startswith("female").values
     X = df.drop(columns=["target", "personal_status"])  # personal_status encodes sex: excluded (fair-lending practice)
     return X, df["target"].values, female, (df["age"] < 25).values

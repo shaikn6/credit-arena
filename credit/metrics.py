@@ -36,3 +36,11 @@ def bootstrap_auc_ci(y, p, n=500, seed=0):
     rng = np.random.default_rng(seed)
     aucs = [roc_auc_score(y[i], p[i]) for i in (rng.integers(0, len(y), len(y)) for _ in range(n))]
     return [round(float(np.percentile(aucs, 2.5)), 4), round(float(np.percentile(aucs, 97.5)), 4)]
+
+
+def paired_bootstrap_auc_diff(y, p_a, p_b, n=2000, seed=0):
+    """AUC(p_a) - AUC(p_b) on the same cases, with a 95% percentile interval from n paired resamples of the rows."""
+    rng = np.random.default_rng(seed)
+    d = [roc_auc_score(y[i], p_a[i]) - roc_auc_score(y[i], p_b[i]) for i in (rng.integers(0, len(y), len(y)) for _ in range(n))]
+    return dict(diff=round(float(roc_auc_score(y, p_a) - roc_auc_score(y, p_b)), 4),
+                ci95=[round(float(np.percentile(d, 2.5)), 4), round(float(np.percentile(d, 97.5)), 4)])
