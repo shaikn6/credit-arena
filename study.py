@@ -34,12 +34,16 @@ def german():
     return X, df["target"].values, female, (df["age"] < 25).values
 
 
-def make_models(X):
+TUNE_LR_C = (0.01, 0.1, 1.0, 10.0)
+TUNE_GB = [(lr, leaves) for lr in (0.03, 0.1) for leaves in (7, 15, 31)]
+
+
+def make_models(X, lr_c=0.5, gb=(0.05, 15)):
     cat = [c for c in X.columns if not pd.api.types.is_numeric_dtype(X[c])]
     num = [c for c in X.columns if c not in cat]
     prep = lambda: make_column_transformer((StandardScaler(), num), (OneHotEncoder(handle_unknown="ignore"), cat))
-    hgb = dict(max_iter=300, learning_rate=0.05, max_leaf_nodes=15, l2_regularization=1.0, random_state=0)
-    return {"logistic regression": make_pipeline(prep(), LogisticRegression(max_iter=3000, C=0.5)),
+    hgb = dict(max_iter=300, learning_rate=gb[0], max_leaf_nodes=gb[1], l2_regularization=1.0, random_state=0)
+    return {"logistic regression": make_pipeline(prep(), LogisticRegression(max_iter=3000, C=lr_c)),
             "random forest": make_pipeline(prep(), RandomForestClassifier(400, min_samples_leaf=10, n_jobs=4, random_state=0)),
             "gradient boosting": make_pipeline(prep(), HistGradientBoostingClassifier(**hgb)),
             "MLP": make_pipeline(prep(), MLPClassifier((64, 32), alpha=1e-3, max_iter=500, random_state=0,
@@ -62,12 +66,20 @@ def parity(flag, group):
     return float(min(a, b) / max(a, b)) if max(a, b) > 0 else None
 
 
-def one_split(X, y, female, young, seed):
+def tune(X, y, tr, va):
+    """Pick logistic regression's C and gradient boosting's learning rate / leaves by validation AUC."""
+    auc = lambda m: roc_auc_score(y[va], m.fit(X.iloc[tr], y[tr]).predict_proba(X.iloc[va])[:, 1])
+    lr_c = max(TUNE_LR_C, key=lambda c: auc(make_models(X, lr_c=c)["logistic regression"]))
+    gb = max(TUNE_GB, key=lambda g: auc(make_models(X, gb=g)["gradient boosting"]))
+    return dict(lr_c=lr_c, gb=gb)
+
+
+def one_split(X, y, female, young, seed, tuned=False):
     idx = np.arange(len(y))
     tr, rest = train_test_split(idx, test_size=0.4, stratify=y, random_state=seed)
     va, te = train_test_split(rest, test_size=0.5, stratify=y[rest], random_state=seed)
     P_va, P_te, fit_s = {}, {}, {}
-    for name, m in make_models(X).items():
+    for name, m in make_models(X, **(tune(X, y, tr, va) if tuned else {})).items():
         t = time.perf_counter(); m.fit(X.iloc[tr], y[tr]); fit_s[name] = time.perf_counter() - t
         P_va[name], P_te[name] = m.predict_proba(X.iloc[va])[:, 1], m.predict_proba(X.iloc[te])[:, 1]
     for P in (P_va, P_te):
@@ -107,14 +119,23 @@ def summarise(runs):
     return s
 
 
+AGE_COL = {"taiwan": "x5", "german": "age"}
+
 if __name__ == "__main__":
-    res = {"cost_ratios": COST_RATIOS, "datasets": {}}
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--variant", choices=["base", "no_age", "tuned"], default="base",
+                    help="no_age: drop age from the inputs; tuned: pick key hyperparameters on validation data per split")
+    variant = ap.parse_args().variant
+    res = {"cost_ratios": COST_RATIOS, "variant": variant, "datasets": {}}
     for dname, loader, n_splits in (("taiwan", taiwan, 20), ("german", german, 50)):
         X, y, female, young = loader()
+        if variant == "no_age":
+            X = X.drop(columns=[AGE_COL[dname]])
         t0 = time.time()
-        runs = [one_split(X, y, female, young, s) for s in range(n_splits)]
+        runs = [one_split(X, y, female, young, s, tuned=variant == "tuned") for s in range(n_splits)]
         res["datasets"][dname] = {"n": len(y), "default_rate": round(float(y.mean()), 4), "n_splits": n_splits,
                                   "female_share": round(float(female.mean()), 4), "young_share": round(float(young.mean()), 4),
                                   "summary": summarise(runs), "wall_s": round(time.time() - t0, 1)}
         print(dname, len(y), round(time.time() - t0), flush=True)
-    json.dump(res, open("study.json", "w"), indent=2)
+    json.dump(res, open("study.json" if variant == "base" else f"study_{variant}.json", "w"), indent=2)
