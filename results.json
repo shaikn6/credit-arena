@@ -1,8 +1,6 @@
 {
   "models": {
     "logistic regression": {
-      "fit_seconds": 0.3,
-      "inference_us_per_row": 0.2,
       "auc": 0.7459,
       "pr_auc": 0.5035,
       "ks": 0.3868,
@@ -17,8 +15,6 @@
       ]
     },
     "random forest": {
-      "fit_seconds": 3.3,
-      "inference_us_per_row": 10.8,
       "auc": 0.772,
       "pr_auc": 0.5396,
       "ks": 0.407,
@@ -33,8 +29,6 @@
       ]
     },
     "hist gradient boosting": {
-      "fit_seconds": 3.1,
-      "inference_us_per_row": 8.8,
       "auc": 0.7735,
       "pr_auc": 0.534,
       "ks": 0.4141,
@@ -49,8 +43,6 @@
       ]
     },
     "MLP (64-32)": {
-      "fit_seconds": 0.8,
-      "inference_us_per_row": 1.4,
       "auc": 0.7601,
       "pr_auc": 0.5178,
       "ks": 0.3931,
@@ -65,8 +57,6 @@
       ]
     },
     "ensemble (LR+HGB+MLP)": {
-      "fit_seconds": 4.2,
-      "inference_us_per_row": 10.4,
       "auc": 0.7694,
       "pr_auc": 0.5311,
       "ks": 0.4006,
@@ -81,8 +71,6 @@
       ]
     },
     "segment specialists (HGB x2)": {
-      "fit_seconds": null,
-      "inference_us_per_row": null,
       "auc": 0.7698,
       "pr_auc": 0.5312,
       "ks": 0.4122,
@@ -94,6 +82,43 @@
       "auc_ci95": [
         0.7563,
         0.784
+      ]
+    }
+  },
+  "paired_bootstrap_auc": {
+    "hist gradient boosting minus logistic regression": {
+      "diff": 0.0275,
+      "ci95": [
+        0.0187,
+        0.0369
+      ]
+    },
+    "hist gradient boosting minus random forest": {
+      "diff": 0.0015,
+      "ci95": [
+        -0.0038,
+        0.0067
+      ]
+    },
+    "hist gradient boosting minus MLP (64-32)": {
+      "diff": 0.0134,
+      "ci95": [
+        0.006,
+        0.0208
+      ]
+    },
+    "hist gradient boosting minus ensemble (LR+HGB+MLP)": {
+      "diff": 0.004,
+      "ci95": [
+        -0.0006,
+        0.0086
+      ]
+    },
+    "hist gradient boosting minus segment specialists (HGB x2)": {
+      "diff": 0.0036,
+      "ci95": [
+        -0.0006,
+        0.0082
       ]
     }
   },

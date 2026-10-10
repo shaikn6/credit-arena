@@ -1,6 +1,6 @@
 import numpy as np
 from credit.data import load, features, split, PROTECTED
-from credit.metrics import ks, ece, best_threshold, cost, FN_COST, FP_COST
+from credit.metrics import ks, ece, best_threshold, cost, paired_bootstrap_auc_diff, FN_COST, FP_COST
 
 
 def test_protected_attribute_not_a_feature():
@@ -29,3 +29,18 @@ def test_cost_weights_and_threshold_search():
 
 def test_ece_zero_for_calibrated_constant():
     y = np.array([0, 1] * 500); assert ece(y, np.full(1000, 0.5)) < 1e-9
+
+
+def test_paired_bootstrap_auc_diff():
+    from sklearn.metrics import roc_auc_score
+    rng = np.random.default_rng(0); y = rng.integers(0, 2, 1000)
+    strong, weak, noise = y * 0.5 + rng.random(1000), y * 0.05 + rng.random(1000), rng.random(1000) * 1e-3
+    r = paired_bootstrap_auc_diff(y, strong, weak, n=300)
+    assert abs(r["diff"] - (roc_auc_score(y, strong) - roc_auc_score(y, weak))) < 1e-4
+    assert 0 < r["ci95"][0] <= r["diff"] <= r["ci95"][1]                                    # a real gap excludes zero
+    assert r == paired_bootstrap_auc_diff(y, strong, weak, n=300)                           # fixed seed: reproducible
+    back = paired_bootstrap_auc_diff(y, weak, strong, n=300)
+    assert back["diff"] == -r["diff"] and back["ci95"] == [-r["ci95"][1], -r["ci95"][0]]    # antisymmetric
+    assert paired_bootstrap_auc_diff(y, strong, strong, n=50) == dict(diff=0.0, ci95=[0.0, 0.0])
+    same = paired_bootstrap_auc_diff(y, strong, strong + noise, n=300)                      # near-identical models: includes zero
+    assert same["ci95"][0] <= 0 <= same["ci95"][1]

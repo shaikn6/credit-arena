@@ -1,0 +1,7 @@
+# pinned from a fresh Python 3.12 virtual environment
+numpy==2.5.3
+pandas==3.0.6
+scikit-learn==1.9.1
+scipy==1.18.1
+pytest==9.1.1
+ruff==0.17.0

@@ -1,5 +1,5 @@
 """Credit-default model arena: accuracy, calibration, business cost, latency, fairness, and specialists vs global."""
-import json, time
+import json, platform, time
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -7,7 +7,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from credit.data import load, features, split, PROTECTED
-from credit.metrics import score, best_threshold, bootstrap_auc_ci
+from credit.metrics import score, best_threshold, bootstrap_auc_ci, paired_bootstrap_auc_diff
 
 df = load()
 tr, va, te = split(df)
@@ -20,18 +20,23 @@ models = {
     "hist gradient boosting": HistGradientBoostingClassifier(max_iter=300, learning_rate=0.05, max_leaf_nodes=15, l2_regularization=1.0, random_state=0),
     "MLP (64-32)": make_pipeline(StandardScaler(), MLPClassifier((64, 32), alpha=1e-3, early_stopping=True, max_iter=300, random_state=0)),
 }
-P_va, P_te, res = {}, {}, {}
+P_va, P_te, res, timings = {}, {}, {}, {}
 for name, m in models.items():
     t = time.perf_counter(); m.fit(Xtr, ytr); fit_s = time.perf_counter() - t
     P_va[name], P_te[name] = m.predict_proba(Xva)[:, 1], m.predict_proba(Xte)[:, 1]
-    t = time.perf_counter(); m.predict_proba(Xte); inf = (time.perf_counter() - t) / len(Xte) * 1e6
-    res[name] = dict(fit_seconds=round(fit_s, 1), inference_us_per_row=round(inf, 1))
+    inf = []
+    for _ in range(5):  # median of 5 passes over the test set
+        t = time.perf_counter(); m.predict_proba(Xte); inf.append((time.perf_counter() - t) / len(Xte) * 1e6)
+    res[name] = {}
+    timings[name] = dict(fit_seconds=round(fit_s, 2), inference_us_per_row=round(float(np.median(inf)), 2))
 
 # divide and conquer: average of the diverse members, weights fixed (no tuning on test)
 ens = ["logistic regression", "hist gradient boosting", "MLP (64-32)"]
 P_va["ensemble (LR+HGB+MLP)"] = np.mean([P_va[k] for k in ens], 0)
 P_te["ensemble (LR+HGB+MLP)"] = np.mean([P_te[k] for k in ens], 0)
-res["ensemble (LR+HGB+MLP)"] = dict(fit_seconds=sum(res[k]["fit_seconds"] for k in ens), inference_us_per_row=sum(res[k]["inference_us_per_row"] for k in ens))
+res["ensemble (LR+HGB+MLP)"] = {}
+timings["ensemble (LR+HGB+MLP)"] = dict(fit_seconds=round(sum(timings[k]["fit_seconds"] for k in ens), 2),
+                                        inference_us_per_row=round(sum(timings[k]["inference_us_per_row"] for k in ens), 2))
 
 # segment specialists: one HGB per delinquency segment vs the single global HGB
 seg = lambda X: (X["max_delinq"] >= 1).values
@@ -48,12 +53,18 @@ def spec_proba(X):
 
 
 P_va["segment specialists (HGB x2)"], P_te["segment specialists (HGB x2)"] = spec_proba(Xva), spec_proba(Xte)
-res["segment specialists (HGB x2)"] = dict(fit_seconds=None, inference_us_per_row=None)
+res["segment specialists (HGB x2)"] = {}
 
 for name in P_te:
     th = best_threshold(yva, P_va[name])
     res[name].update(score(yte, P_te[name], th), auc_ci95=bootstrap_auc_ci(yte, P_te[name]))
     print(f"{name:32s} AUC {res[name]['auc']}  KS {res[name]['ks']}  ECE {res[name]['ece']}  cost {res[name]['cost_per_account']}", flush=True)
+
+# paired bootstrap on the test set: is gradient boosting's AUC lead over each other model distinguishable from zero?
+HGB = "hist gradient boosting"
+paired = {f"{HGB} minus {name}": paired_bootstrap_auc_diff(yte, P_te[HGB], P_te[name]) for name in P_te if name != HGB}
+for k, v in paired.items():
+    print(f"{k:60s} {v['diff']:+.4f}  95% CI {v['ci95']}", flush=True)
 
 # fairness audit at each model's validation-chosen threshold (sex was NOT a feature)
 sex = te[PROTECTED].values
@@ -64,6 +75,10 @@ for name in P_te:
     appr = {s: 1 - r for s, r in rate.items()}
     audit[name] = dict(decline_rate_by_sex=rate, approval_ratio_min_over_max=round(min(appr.values()) / max(appr.values()), 4),
                        auc_by_sex={int(s): round(float(__import__("sklearn.metrics", fromlist=["x"]).roc_auc_score(yte[sex == s], P_te[name][sex == s])), 4) for s in (1, 2)})
-json.dump(dict(models=res, fairness=audit, n_train=len(tr), n_valid=len(va), n_test=len(te), default_rate=float(df["target"].mean())),
+json.dump(dict(models=res, paired_bootstrap_auc=paired, fairness=audit, n_train=len(tr), n_valid=len(va), n_test=len(te), default_rate=float(df["target"].mean())),
           open("results.json", "w"), indent=2)
 np.savez("test_probs.npz", y=yte, **P_te)
+# wall-clock timings depend on the machine and vary run to run, so they are kept out of results.json
+lr, hgb = timings["logistic regression"]["inference_us_per_row"], timings[HGB]["inference_us_per_row"]
+json.dump(dict(machine=f"{platform.machine()} {platform.system()}, python {platform.python_version()}", models=timings,
+               inference_ratio_hgb_over_lr=round(hgb / lr, 1)), open("timings.json", "w"), indent=2)

@@ -26,3 +26,20 @@ def test_frontier_meets_target_on_validation_and_costs_more():
     for tgt, f in zip(TARGETS, out):
         if f is not None:
             assert f["ratio"] >= tgt - 1e-12 and f["cost"] >= out[0]["cost"] - 1e-12
+
+
+def test_missing_data_file_names_the_download_step(tmp_path):
+    import pytest
+    from study import read
+    with pytest.raises(SystemExit, match="make data"):
+        read(str(tmp_path / "data_german.csv"))
+
+
+def test_german_rows_relabels_codes_and_target():
+    from download_data import GERMAN_COLUMNS, german_rows
+    raw = "A11 6 A34 A43 1169 A65 A75 4 A93 A101 4 A121 67 A143 A152 2 A173 1 A192 A201 1\n" \
+          "A12 48 A32 A43 5951 A61 A73 2 A92 A101 2 A121 22 A143 A152 1 A173 1 A191 A201 2\n"
+    header, a, b = german_rows(raw)
+    assert header == list(GERMAN_COLUMNS) and len(a) == len(b) == 21
+    row = dict(zip(header, b))
+    assert row["personal_status"] == "female div/dep/mar" and row["age"] == "22" and row["target"] == "1" and a[-1] == "0"
