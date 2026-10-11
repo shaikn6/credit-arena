@@ -5,3 +5,4 @@ test_probs.npz
 data_german.csv
 timings.json
 .venv/
+data_gmsc.csv
