@@ -6,3 +6,4 @@ data_german.csv
 timings.json
 .venv/
 data_gmsc.csv
+data_lc/

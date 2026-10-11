@@ -92,6 +92,7 @@ parity by sex and by age (under 25). The committed outputs:
 | `study_tuned.json` | `python study.py --variant tuned` (about 45 minutes) | the same with logistic regression's C and gradient boosting's learning rate / leaves picked on validation data per split |
 | `study_extra.json` | `python study_extra.py` (about 20 minutes) | learning curve, reliability bins, group error rates, fine parity sweep, age-proxy analysis, per-split results with a DeLong test on split 0, accuracy-parity frontier |
 | `study_gmsc.json` | `python study_gmsc.py` (about 6 minutes; downloads OpenML dataset 46929 on first run) | a third portfolio of 150,000 accounts (Give Me Some Credit): the same models over 20 splits, per-split values, and a learning curve up to 90,000 training accounts |
+| `study_lc.json` | `python study_lc.py` (about 25 minutes; resumable with `--budget SECONDS`; needs `data_lc/accepted_2007_to_2018Q4.csv.gz` from the Kaggle dataset `wordsforthewise/lending-club`) | a fourth portfolio of 589,488 Lending Club loans issued 2012-2015: ten random splits, a learning curve to 350,000 loans, and an out-of-time test that trains on 2012-2013 and tests on 2014-2015, with and without the lender's sub-grade as an input |
 
 In `study.json`, gradient boosting minus logistic regression averages +0.0311 AUC on the Taiwan data (2.5 / 97.5
 percentiles over splits 0.0241 to 0.0392, ahead in every split) and -0.0120 on the German data (-0.0508 to 0.0248, ahead in
