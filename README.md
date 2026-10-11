@@ -91,6 +91,7 @@ parity by sex and by age (under 25). The committed outputs:
 | `study_no_age.json` | `python study.py --variant no_age` | the same with age removed from the inputs |
 | `study_tuned.json` | `python study.py --variant tuned` (about 45 minutes) | the same with logistic regression's C and gradient boosting's learning rate / leaves picked on validation data per split |
 | `study_extra.json` | `python study_extra.py` (about 20 minutes) | learning curve, reliability bins, group error rates, fine parity sweep, age-proxy analysis, per-split results with a DeLong test on split 0, accuracy-parity frontier |
+| `study_gmsc.json` | `python study_gmsc.py` (about 6 minutes; downloads OpenML dataset 46929 on first run) | a third portfolio of 150,000 accounts (Give Me Some Credit): the same models over 20 splits, per-split values, and a learning curve up to 90,000 training accounts |
 
 In `study.json`, gradient boosting minus logistic regression averages +0.0311 AUC on the Taiwan data (2.5 / 97.5
 percentiles over splits 0.0241 to 0.0392, ahead in every split) and -0.0120 on the German data (-0.0508 to 0.0248, ahead in
