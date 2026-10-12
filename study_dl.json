@@ -1,0 +1,83 @@
+{
+ "note": "Same preprocessing and splits for every model; FT-Transformer is a compact tabular transformer (Gorishniy et al. 2021) trained on CPU with early stopping. AUC is test-set, repeated stratified splits.",
+ "portfolios": {
+  "taiwan": {
+   "n": 30000,
+   "pos_rate": 0.2212,
+   "repeats": 10,
+   "models": {
+    "logistic regression": {
+     "auc_mean": 0.7530215264427709,
+     "auc_lo": 0.7448260026372863,
+     "auc_hi": 0.7643409501358717,
+     "fit_s_mean": 0.06369208759861067,
+     "vs_histgbm_mean_diff": -0.032121741550774054,
+     "vs_histgbm_corrected_p": 1.722663663444947e-06
+    },
+    "HistGBM": {
+     "auc_mean": 0.785143267993545,
+     "auc_lo": 0.774353297196565,
+     "auc_hi": 0.7963806252178051,
+     "fit_s_mean": 0.7997908958997868,
+     "vs_histgbm_mean_diff": 0.0,
+     "vs_histgbm_corrected_p": null
+    },
+    "XGBoost": {
+     "auc_mean": 0.7796298091087814,
+     "auc_lo": 0.7683066441264743,
+     "auc_hi": 0.7900286559370148,
+     "fit_s_mean": 0.42561265820040717,
+     "vs_histgbm_mean_diff": -0.005513458884763589,
+     "vs_histgbm_corrected_p": 0.00230310564887815
+    },
+    "FT-Transformer": {
+     "auc_mean": 0.7813326278637996,
+     "auc_lo": 0.7684175523873216,
+     "auc_hi": 0.7920904449408821,
+     "fit_s_mean": 90.65244365849867,
+     "vs_histgbm_mean_diff": -0.003810640129745324,
+     "vs_histgbm_corrected_p": 0.020586905252992588
+    }
+   }
+  },
+  "gmsc": {
+   "n": 50000,
+   "pos_rate": 0.06796,
+   "repeats": 10,
+   "models": {
+    "logistic regression": {
+     "auc_mean": 0.8435052603856497,
+     "auc_lo": 0.836079454367584,
+     "auc_hi": 0.8507531313601495,
+     "fit_s_mean": 0.030712033199233702,
+     "vs_histgbm_mean_diff": -0.02251805743425126,
+     "vs_histgbm_corrected_p": 2.23569100791944e-05
+    },
+    "HistGBM": {
+     "auc_mean": 0.8660233178199007,
+     "auc_lo": 0.8582860866750851,
+     "auc_hi": 0.8730537443034277,
+     "fit_s_mean": 0.8383086958005151,
+     "vs_histgbm_mean_diff": 0.0,
+     "vs_histgbm_corrected_p": null
+    },
+    "XGBoost": {
+     "auc_mean": 0.8606441692418028,
+     "auc_lo": 0.8517027185550363,
+     "auc_hi": 0.8694731152569649,
+     "fit_s_mean": 0.3728616040985798,
+     "vs_histgbm_mean_diff": -0.005379148578098148,
+     "vs_histgbm_corrected_p": 0.0005499541846445413
+    },
+    "FT-Transformer": {
+     "auc_mean": 0.8637861309628928,
+     "auc_lo": 0.8569999254976792,
+     "auc_hi": 0.8699778936611395,
+     "fit_s_mean": 82.75444669610151,
+     "vs_histgbm_mean_diff": -0.002237186857008089,
+     "vs_histgbm_corrected_p": 0.06746208915466304
+    }
+   }
+  }
+ }
+}
