@@ -67,8 +67,13 @@ ratio (lower group / higher group) at each model's cost-optimal threshold, again
 | Random forest | 0.89 |
 | Ensemble | 0.89 |
 
-All pass, but the most accurate models sit closest to the line: a real accuracy-vs-parity trade-off. AUC by sex differs by
+All pass **by sex**, but the most accurate models sit closest to the line: a real accuracy-vs-parity trade-off. AUC by sex differs by
 0.0001-0.020 depending on the model (largest for logistic regression). This is a screening check, not a full disparate-impact analysis.
+
+**Age is where it breaks.** The same approval-ratio check by age (under 25) holds near parity only at low cost ratios; as the
+cost ratio rises it fails the four-fifths rule for every model. On the 20-split Taiwan study (`study.json`) the under-25 approval
+ratio falls to about 0.73 (random forest / gradient boosting) at a 5:1 cost ratio and to 0.21-0.40 at 10:1 (0.21 logistic
+regression, 0.40 gradient boosting). So the "all pass" above is a sex-only result; the disparate impact shows up on age.
 
 ## Caveats
 
