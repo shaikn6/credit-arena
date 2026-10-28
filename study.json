@@ -5,6 +5,7 @@
     5,
     10
   ],
+  "variant": "base",
   "datasets": {
     "taiwan": {
       "n": 30000,

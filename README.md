@@ -147,5 +147,10 @@ make test    # ruff check + pytest
 make study   # study.json (about 7 minutes)
 ```
 
+On macOS with the python.org installer, `make data` fails with `SSL: CERTIFICATE_VERIFY_FAILED` on the German credit
+download (and on the OpenML one unless scikit-learn has already cached it) until certificates are installed: run
+`/Applications/Python 3.x/Install Certificates.command` once (3.x is your version), or use
+`SSL_CERT_FILE=/etc/ssl/cert.pem make data`.
+
 Tested on Python 3.12 with the pinned versions in `requirements.txt`. `study.py` and `study_extra.py` stop with a
 message pointing to `make data` if a data file is missing.
