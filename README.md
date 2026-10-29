@@ -1,9 +1,13 @@
 # credit-arena
 
+[![CI](https://github.com/shaikn6/credit-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/shaikn6/credit-arena/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](.github/workflows/ci.yml)
+
 Which model should score credit-card default risk, and when is a bigger or more complex one worth it? Six
 model families on the UCI *Default of Credit Card Clients* data (30,000 accounts, 22% default), compared on
 discrimination, calibration, **business cost**, latency and **fair-lending** behaviour, with paired
-bootstrap tests so that "better" means statistically better.
+bootstrap tests so that "better" means statistically better. Reproduce: see [Run](#run).
 
 ![results](results.png)
 
