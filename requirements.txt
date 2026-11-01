@@ -1,7 +1,7 @@
 # pinned from a fresh Python 3.12 virtual environment
 numpy==2.5.4
 # held below 3.1, see .github/dependabot.yml
-pandas==3.0.6
+pandas==3.1.0
 scikit-learn==1.9.1
 scipy==1.18.1
 pytest==9.2.0
