@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # pandas 3.1 breaks scikit-learn 1.9.1 fetch_openml ARFF parsing; remove once scikit-learn supports pandas 3.1.
+    ignore:
+      - dependency-name: pandas
+        versions: ['>=3.1']
     groups:
       pip:
         patterns: ["*"]
