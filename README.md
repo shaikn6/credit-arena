@@ -160,3 +160,6 @@ download (and on the OpenML one unless scikit-learn has already cached it) until
 
 Tested on Python 3.12 with the pinned versions in `requirements.txt`. `study.py` and `study_extra.py` stop with a
 message pointing to `make data` if a data file is missing.
+
+---
+<sub>Part of [Nagizaaz Shaik's open-source work](https://github.com/shaikn6) · [all repositories](https://github.com/shaikn6?tab=repositories)</sub>
