@@ -1,5 +1,7 @@
 # credit-arena
 
+> **Six credit-default models, one honest scorecard: AUC, calibration, business cost and fair-lending gaps side by side, with bootstrap CIs.**
+
 [![CI](https://github.com/shaikn6/credit-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/shaikn6/credit-arena/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](.github/workflows/ci.yml)
