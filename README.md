@@ -9,7 +9,7 @@
 Which model should score credit-card default risk, and when is a bigger or more complex one worth it? Six
 model families on the UCI *Default of Credit Card Clients* data (30,000 accounts, 22% default), compared on
 discrimination, calibration, **business cost**, latency and **fair-lending** behaviour, with paired
-bootstrap tests so that "better" means statistically better. Reproduce: see [Run](#run).
+bootstrap tests so that "better" means statistically better. Reproduce: `make data && make run` (about 1 minute; see [Run](#run) for setup).
 
 ![results](results.png)
 
@@ -64,15 +64,18 @@ read `timings.json` (it also records `inference_ratio_hgb_over_lr`).
 Sex was not a model input, yet decline rates still differ because the inputs correlate with it. Approval-rate
 ratio (lower group / higher group) at each model's cost-optimal threshold, against the 0.80 four-fifths rule:
 
-| Model | Approval ratio |
+| Model | Approval ratio [95% CI] |
 |---|---|
-| Logistic regression | 0.96 |
-| MLP | 0.92 |
-| Segment specialists | 0.92 |
-| Hist. gradient boosting | 0.89 |
-| Random forest | 0.89 |
-| Ensemble | 0.89 |
+| Logistic regression | 0.96 [0.93, 0.99] |
+| MLP | 0.92 [0.88, 0.95] |
+| Segment specialists | 0.92 [0.88, 0.97] |
+| Hist. gradient boosting | 0.89 [0.85, 0.94] |
+| Random forest | 0.89 [0.84, 0.94] |
+| Ensemble | 0.89 [0.85, 0.93] |
 
+The interval is a seeded percentile bootstrap over the 6,000 test accounts at the fixed threshold (`bootstrap_approval_ratio_ci`
+in `credit/metrics.py`, the `approval_ratio_ci95` block of `results.json`); it is test-set sampling noise on the min/max
+statistic, which is capped at 1. Every lower bound clears 0.80, so the four-fifths rule holds even at the 2.5 percentile.
 All pass **by sex**, but the most accurate models sit closest to the line: a real accuracy-vs-parity trade-off. AUC by sex differs by
 0.0001-0.020 depending on the model (largest for logistic regression). This is a screening check, not a full disparate-impact analysis.
 

@@ -44,3 +44,18 @@ def paired_bootstrap_auc_diff(y, p_a, p_b, n=2000, seed=0):
     d = [roc_auc_score(y[i], p_a[i]) - roc_auc_score(y[i], p_b[i]) for i in (rng.integers(0, len(y), len(y)) for _ in range(n))]
     return dict(diff=round(float(roc_auc_score(y, p_a) - roc_auc_score(y, p_b)), 4),
                 ci95=[round(float(np.percentile(d, 2.5)), 4), round(float(np.percentile(d, 97.5)), 4)])
+
+
+def approval_ratio(flag, group):
+    """Four-fifths statistic: lowest group's approval rate over the highest's, across the groups in `group`.
+    `flag` is True where an account is declined (scored high risk), so approval is 1 - decline rate. Bounded at 1."""
+    appr = [1 - flag[group == g].mean() for g in np.unique(group)]
+    return float(min(appr) / max(appr))
+
+
+def bootstrap_approval_ratio_ci(flag, group, n=500, seed=0):
+    """95% percentile interval for `approval_ratio` from n resamples of the accounts (the threshold stays fixed).
+    This is test-set sampling noise on the min/max statistic, not variation across splits or thresholds."""
+    rng = np.random.default_rng(seed)
+    rs = [approval_ratio(flag[i], group[i]) for i in (rng.integers(0, len(flag), len(flag)) for _ in range(n))]
+    return [round(float(np.percentile(rs, 2.5)), 4), round(float(np.percentile(rs, 97.5)), 4)]
