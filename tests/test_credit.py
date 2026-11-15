@@ -1,6 +1,8 @@
 import numpy as np
+from sklearn.metrics import roc_auc_score
 from credit.data import load, features, split, PROTECTED
-from credit.metrics import ks, ece, best_threshold, cost, paired_bootstrap_auc_diff, FN_COST, FP_COST
+from credit.metrics import (ks, ece, best_threshold, cost, score, bootstrap_auc_ci, paired_bootstrap_auc_diff,
+                            approval_ratio, bootstrap_approval_ratio_ci, FN_COST, FP_COST)
 
 
 def test_protected_attribute_not_a_feature():
@@ -29,6 +31,42 @@ def test_cost_weights_and_threshold_search():
 
 def test_ece_zero_for_calibrated_constant():
     y = np.array([0, 1] * 500); assert ece(y, np.full(1000, 0.5)) < 1e-9
+
+
+def test_ece_weights_bins_by_miscalibration():
+    # two equal clusters: p=0.2 with a 0.4 default rate, p=0.8 with a 0.7 rate.
+    # gaps 0.2 and 0.1, each weighted 0.5, so ECE = 0.5*0.2 + 0.5*0.1 = 0.15.
+    y = np.array([1] * 200 + [0] * 300 + [1] * 350 + [0] * 150)
+    p = np.array([0.2] * 500 + [0.8] * 500)
+    assert abs(ece(y, p) - 0.15) < 1e-9
+
+
+def test_score_auc_matches_hand_computed_value():
+    # 3 of the 4 positive/negative pairs are correctly ordered -> AUC 0.75.
+    y, p = np.array([0, 0, 1, 1]), np.array([0.1, 0.4, 0.35, 0.8])
+    s = score(y, p, 0.5)
+    assert s["auc"] == 0.75 and s["auc"] == round(roc_auc_score(y, p), 4)
+
+
+def test_bootstrap_auc_ci_brackets_point_estimate_and_is_seeded():
+    rng = np.random.default_rng(0); y = rng.integers(0, 2, 1000); p = y * 0.4 + rng.random(1000)
+    lo, hi = bootstrap_auc_ci(y, p, n=300)
+    assert lo < roc_auc_score(y, p) < hi
+    assert [lo, hi] == bootstrap_auc_ci(y, p, n=300)                       # fixed seed: reproducible
+    yp = np.array([0] * 50 + [1] * 50)
+    assert bootstrap_auc_ci(yp, yp.astype(float), n=100) == [1.0, 1.0]     # perfect ranking: CI collapses at 1
+
+
+def test_approval_ratio_and_its_bootstrap_ci():
+    g = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+    flag = np.array([1, 0, 0, 0, 1, 1, 0, 0], dtype=bool)                  # approve 3/4 vs 2/4 -> ratio 0.5/0.75
+    assert abs(approval_ratio(flag, g) - (0.5 / 0.75)) < 1e-12
+    assert approval_ratio(np.array([1, 0, 1, 0], dtype=bool), np.array([0, 0, 1, 1])) == 1.0  # equal treatment
+    rng = np.random.default_rng(0); grp = rng.integers(0, 2, 1000)
+    decline = rng.random(1000) < np.where(grp == 1, 0.5, 0.3)              # group 1 declined more often
+    lo, hi = bootstrap_approval_ratio_ci(decline, grp, n=300)
+    assert lo <= approval_ratio(decline, grp) <= hi
+    assert [lo, hi] == bootstrap_approval_ratio_ci(decline, grp, n=300)    # fixed seed: reproducible
 
 
 def test_paired_bootstrap_auc_diff():

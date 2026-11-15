@@ -3,11 +3,12 @@ import json, platform, time
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from credit.data import load, features, split, PROTECTED
-from credit.metrics import score, best_threshold, bootstrap_auc_ci, paired_bootstrap_auc_diff
+from credit.metrics import score, best_threshold, bootstrap_auc_ci, paired_bootstrap_auc_diff, approval_ratio, bootstrap_approval_ratio_ci
 
 df = load()
 tr, va, te = split(df)
@@ -72,9 +73,9 @@ audit = {}
 for name in P_te:
     t = res[name]["threshold"]; flag = P_te[name] >= t
     rate = {int(s): float(flag[sex == s].mean()) for s in (1, 2)}          # share flagged as high risk (declined)
-    appr = {s: 1 - r for s, r in rate.items()}
-    audit[name] = dict(decline_rate_by_sex=rate, approval_ratio_min_over_max=round(min(appr.values()) / max(appr.values()), 4),
-                       auc_by_sex={int(s): round(float(__import__("sklearn.metrics", fromlist=["x"]).roc_auc_score(yte[sex == s], P_te[name][sex == s])), 4) for s in (1, 2)})
+    audit[name] = dict(decline_rate_by_sex=rate, approval_ratio_min_over_max=round(approval_ratio(flag, sex), 4),
+                       approval_ratio_ci95=bootstrap_approval_ratio_ci(flag, sex),
+                       auc_by_sex={int(s): round(float(roc_auc_score(yte[sex == s], P_te[name][sex == s])), 4) for s in (1, 2)})
 json.dump(dict(models=res, paired_bootstrap_auc=paired, fairness=audit, n_train=len(tr), n_valid=len(va), n_test=len(te), default_rate=float(df["target"].mean())),
           open("results.json", "w"), indent=2)
 np.savez("test_probs.npz", y=yte, **P_te)
