@@ -5,6 +5,13 @@ from credit.metrics import (ks, ece, best_threshold, cost, score, bootstrap_auc_
                             approval_ratio, bootstrap_approval_ratio_ci, FN_COST, FP_COST)
 
 
+def test_plot_writes_png(tmp_path):
+    import plot
+    output = tmp_path / "results.png"
+    plot.main(output)
+    assert output.stat().st_size > 8 and output.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+
+
 def test_protected_attribute_not_a_feature():
     df = load()
     assert PROTECTED not in features(df).columns and "target" not in features(df).columns

@@ -88,10 +88,11 @@ regression, 0.40 gradient boosting). So the "all pass" above is a sex-only resul
 
 - One dataset (Taiwan, 2005), one split seed. The ranking among the top models is not stable enough to claim;
   the gap to logistic regression is.
-- At a 5:1 cost ratio and 22% base rate the cost-optimal threshold flags 45-55% of accounts for decline, which
+- At a 5:1 cost ratio and 22% base rate the cost-optimal threshold flags 31% (logistic regression) to 51% (random
+  forest) of test accounts for decline (scores in `test_probs.npz` at the thresholds stored in `results.json`), which
   reflects the cost assumption, not a recommended policy.
-- Models use near-default hyperparameters and were not exhaustively tuned; a tuned gradient-boosting library
-  (XGBoost / LightGBM) may widen the gap.
+- Models use near-default hyperparameters and were not exhaustively tuned. A separate check (`study_dl.json`, below)
+  found that XGBoost and an FT-Transformer did not beat the scikit-learn gradient boosting either.
 
 ## Repeated-split study
 
@@ -107,15 +108,20 @@ parity by sex and by age (under 25). The committed outputs:
 | `study_extra.json` | `python study_extra.py` (about 20 minutes) | learning curve, reliability bins, group error rates, fine parity sweep, age-proxy analysis, per-split results with a DeLong test on split 0, accuracy-parity frontier |
 | `study_gmsc.json` | `python study_gmsc.py` (about 6 minutes; downloads OpenML dataset 46929 on first run) | a third portfolio of 150,000 accounts (Give Me Some Credit): the same models over 20 splits, per-split values, and a learning curve up to 90,000 training accounts |
 | `study_lc.json` | `python study_lc.py` (about 25 minutes; resumable with `--budget SECONDS`; needs `data_lc/accepted_2007_to_2018Q4.csv.gz` from the Kaggle dataset `wordsforthewise/lending-club`) | a fourth portfolio of 589,488 Lending Club loans issued 2012-2015: ten random splits, a learning curve to 350,000 loans, and an out-of-time test that trains on 2012-2013 and tests on 2014-2015, with and without the lender's sub-grade as an input |
+| `study_dl.json` | `python study_dl.py` (needs `torch` and `xgboost`, which are not in `requirements.txt`; CPU only) | XGBoost and an FT-Transformer against gradient boosting and logistic regression over 10 splits of the Taiwan data and a 50,000-account sample of Give Me Some Credit |
 
 In `study.json`, gradient boosting minus logistic regression averages +0.0311 AUC on the Taiwan data (2.5 / 97.5
 percentiles over splits 0.0241 to 0.0392, ahead in every split) and -0.0120 on the German data (-0.0508 to 0.0248, ahead in
-38% of splits): on the small portfolio the more complex model is not better. The `fit_s` and `wall_s` fields in these
-files are wall-clock times and change from run to run; every other field is seeded.
+38% of splits): on the small portfolio the more complex model is not better. In `study_dl.json`, XGBoost averages
+0.0055 AUC below scikit-learn's gradient boosting on the Taiwan data and 0.0054 below on Give Me Some Credit, and the
+FT-Transformer 0.0038 and 0.0022 below, so swapping in a newer library or a tabular deep model did not change the
+verdict. The `fit_s`, `fit_s_mean` and `wall_s` fields in these files are wall-clock times and change from run to
+run; every other field is seeded.
 
 ## Data
 
-Neither dataset is stored in this repository; `make data` downloads both and checks SHA-256 checksums.
+No dataset is stored in this repository. `make data` downloads the first two and checks SHA-256 checksums;
+`study_gmsc.py` fetches the third, and the fourth has to be downloaded by hand.
 
 - **Default of Credit Card Clients** (Taiwan, 2005; 30,000 accounts). Yeh, I-C. (2009). *Default of Credit Card
   Clients* [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C55S3H. Licensed CC BY 4.0. Introduced
@@ -126,17 +132,25 @@ Neither dataset is stored in this repository; `make data` downloads both and che
   Machine Learning Repository. https://doi.org/10.24432/C5NC77. Licensed CC BY 4.0. Downloaded from the UCI archive;
   `download_data.py` replaces the coded values (`A11`, `A12`, ...) with readable labels and recodes the target to
   1 = bad.
+- **Give Me Some Credit** (150,000 accounts). Credit Fusion and W. Cukierski (2011). *Give Me Some Credit*. Kaggle
+  competition, https://www.kaggle.com/competitions/GiveMeSomeCredit. Downloaded by `study_gmsc.py` through the
+  OpenML mirror (data id 46929, licence listed as public).
+- **Lending Club accepted loans** (2007-2018 file; 36-month loans issued 2012-2015 are used). LendingClub loan data
+  as republished by N. George on Kaggle (`wordsforthewise/lending-club`, CC0). Not downloaded automatically; see the
+  `study_lc.json` row above.
 
 ## Intended use
 
-A research comparison of model families on two public datasets: how much accuracy, calibration, cost and approval
+A research comparison of model families on four public datasets: how much accuracy, calibration, cost and approval
 parity change with model complexity. It is not a production credit model and should not be used to make or support
 lending decisions.
 
 ## Limitations
 
-- Both datasets are old and small by industry standards (Taiwan 2005; the German data was donated in 1994), each from a single lender, and
-  contain only accepted applicants, so nothing here speaks to reject inference or to current portfolios.
+- The main table and `study.json` use two datasets that are old and small by industry standards (Taiwan 2005; the
+  German data was donated in 1994). Every dataset here, including the larger Give Me Some Credit (2011) and Lending
+  Club (2012-2015) portfolios, comes from a single lender and contains only accepted applicants, so nothing here
+  speaks to reject inference or to current portfolios.
 - The German data has known coding problems documented by Groemping (2019, "South German Credit Data: Correcting a
   Widely Used Data Set"); this repository uses the original UCI file as distributed.
 - The fairness checks are screening statistics (approval-rate ratios, AUC and error rates by group) on sex and age
@@ -152,6 +166,7 @@ python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 make data    # download data.csv and data_german.csv, verify checksums
 make run     # results.json, test_probs.npz, timings.json (about 1 minute)
+make plot    # results.png from results.json
 make test    # ruff check + pytest
 make study   # study.json (about 7 minutes)
 ```
